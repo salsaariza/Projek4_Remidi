@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'form_screen.dart';
+import 'home_screen.dart'; 
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,14 +30,18 @@ class _SplashScreenState extends State<SplashScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
-            
-            //ikon Next untuk ke FormScreen
+
+            // Ikon Next untuk ke HomeScreen
             IconButton(
-              icon: const Icon(Icons.arrow_forward, size: 40, color: Colors.blue),
+              icon: const Icon(
+                Icons.arrow_forward,
+                size: 40,
+                color: Colors.blue,
+              ),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const FormScreen()),
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               },
             ),

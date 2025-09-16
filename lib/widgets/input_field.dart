@@ -6,6 +6,7 @@ class InputField extends StatelessWidget {
   final String? Function(String?)? validator;
   final bool readOnly;
   final VoidCallback? onTap;
+  final Widget? suffixIcon; // ✅ Tambahan untuk ikon opsional
 
   const InputField({
     super.key,
@@ -14,6 +15,7 @@ class InputField extends StatelessWidget {
     this.validator,
     this.readOnly = false,
     this.onTap,
+    this.suffixIcon, // menambahkan ke constructor
   });
 
   @override
@@ -25,17 +27,8 @@ class InputField extends StatelessWidget {
       onTap: onTap,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), // 🔑 radius
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), // 🔑 radius
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), // 🔑 radius
-          borderSide: const BorderSide(color: Colors.blue, width: 2),
-        ),
+        border: const OutlineInputBorder(),
+        suffixIcon: suffixIcon, // ✅ Tambahkan di InputDecoration
       ),
     );
   }
