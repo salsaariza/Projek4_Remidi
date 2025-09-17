@@ -6,12 +6,14 @@ import '../widgets/dropdown_field.dart';
 import '../widgets/autocomplete_field.dart';
 
 // Warna mirip KAI Access
-const kaiPrimary = Color(0xFF005BAC); // Biru tua
-const kaiAccent = Color(0xFF00AEEF); // Biru muda/aksen
-const kaiBackground = Color(0xFFF5F7FA); // Background abu muda
+const kaiPrimary = Color(0xFF005BAC);
+const kaiAccent = Color(0xFF00AEEF);
+const kaiBackground = Color(0xFFF5F7FA);
 
 class FormScreen extends StatefulWidget {
-  const FormScreen({super.key, required Map<String, dynamic> student});
+  final Map<String, dynamic>? student; // Parameter opsional untuk edit
+
+  const FormScreen({super.key, this.student});
 
   @override
   State<FormScreen> createState() => _FormScreenState();
@@ -48,28 +50,57 @@ class _FormScreenState extends State<FormScreen> {
   String _jenisKelamin = "Laki-laki";
   String _agama = "Islam";
 
-  // Get all dusun
+  @override
+  void initState() {
+    super.initState();
+    _loadStudentData();
+  }
+
+  void _loadStudentData() {
+    final student = widget.student;
+    if (student != null) {
+      _nisnController.text = student['nisn'] ?? '';
+      _namaController.text = student['nama_lengkap'] ?? '';
+      _jenisKelamin =
+          student['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan';
+      _agama = student['agama'] ?? 'Islam';
+      _tempatLahirController.text = student['tempat_lahir'] ?? '';
+      if (student['tanggal_lahir'] != null) {
+        DateTime tgl = DateTime.parse(student['tanggal_lahir']);
+        _tanggalLahirController.text = "${tgl.day}-${tgl.month}-${tgl.year}";
+      }
+      _noHpController.text = student['no_telp_hp'] ?? '';
+      _nikController.text = student['nik'] ?? '';
+      _jalanController.text = student['alamat_jalan'] ?? '';
+      _rtRwController.text =
+          "${student['alamat_rt'] ?? ''}/${student['alamat_rw'] ?? ''}";
+      _selectedDusun = student['alamat_dusun'];
+      _selectedDesa = student['alamat_desa'];
+      _selectedKecamatan = student['alamat_kecamatan'];
+      _selectedKabupaten = student['alamat_kabupaten'];
+      _selectedKodePos = student['alamat_kode_pos'];
+      _ayahController.text = student['nama_ayah'] ?? '';
+      _ibuController.text = student['nama_ibu'] ?? '';
+      _waliController.text = student['nama_wali'] ?? '';
+      _alamatOrtuController.text = student['alamat_ortu_wali'] ?? '';
+    }
+  }
+
   Future<List<String>> _getAllDusun() async {
     try {
-      final response = await supabase
-          .from('locations')
-          .select('dusun')
-          .order('dusun');
+      final response =
+          await supabase.from('locations').select('dusun').order('dusun');
       return response.map((item) => item['dusun'] as String).toList();
     } catch (e) {
-      print('Error fetching dusun: $e');
+      debugPrint('Error fetching dusun: $e');
       return [];
     }
   }
 
-  // Update location from dusun
   Future<void> _updateLocationFromDusun(String dusun) async {
     try {
-      final response = await supabase
-          .from('locations')
-          .select('*')
-          .eq('dusun', dusun)
-          .limit(1);
+      final response =
+          await supabase.from('locations').select('*').eq('dusun', dusun).limit(1);
 
       if (response.isNotEmpty) {
         final location = response.first;
@@ -86,134 +117,103 @@ class _FormScreenState extends State<FormScreen> {
         );
       }
     } catch (e) {
-      print('Error updating location: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ Gagal memuat lokasi: $e")));
+      debugPrint('Error updating location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Gagal memuat lokasi: $e")),
+      );
     }
   }
 
   void saveData() async {
-    print('Starting saveData...'); // Debug: Awal fungsi
-    if (_formKey.currentState!.validate()) {
-      print('Form validation passed'); // Debug: Validasi form berhasil
-      print(
-        'Location data: dusun=$_selectedDusun, desa=$_selectedDesa, kecamatan=$_selectedKecamatan, kabupaten=$_selectedKabupaten, kode_pos=$_selectedKodePos',
-      );
-
-      if (_selectedDusun == null ||
-          _selectedDesa == null ||
-          _selectedKecamatan == null ||
-          _selectedKabupaten == null) {
-        print(
-          'Location validation failed: Missing location data',
-        ); // Debug: Validasi lokasi gagal
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("❌ Pilih alamat lengkap terlebih dahulu"),
-          ),
-        );
-        return;
-      }
-
-      try {
-        // Split RT/RW if provided
-        String? rt;
-        String? rw;
-        if (_rtRwController.text.isNotEmpty) {
-          final rtRw = _rtRwController.text.split('/');
-          rt = rtRw.isNotEmpty ? rtRw[0].trim() : null;
-          rw = rtRw.length > 1 ? rtRw[1].trim() : null;
-          print('RT/RW parsed: rt=$rt, rw=$rw'); // Debug: Parsing RT/RW
-        } else {
-          print('RT/RW empty'); // Debug: RT/RW kosong
-        }
-
-        // Parse tanggal_lahir to DateTime
-        DateTime? tanggalLahir;
-        try {
-          final dateParts = _tanggalLahirController.text.split('-');
-          print('Date parts: $dateParts'); // Debug: Bagian tanggal
-          if (dateParts.length == 3) {
-            tanggalLahir = DateTime(
-              int.parse(dateParts[2]), // year
-              int.parse(dateParts[1]), // month
-              int.parse(dateParts[0]), // day
-            );
-            print(
-              'Parsed tanggal_lahir: ${tanggalLahir.toIso8601String()}',
-            ); // Debug: Tanggal berhasil diparse
-          } else {
-            print(
-              'Invalid date format: ${dateParts.length} parts found',
-            ); // Debug: Format tanggal salah
-            throw Exception('Invalid date format');
-          }
-        } catch (e) {
-          print(
-            'Error parsing tanggal_lahir: $e',
-          ); // Debug: Error parsing tanggal
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("❌ Format tanggal lahir tidak valid")),
-          );
-          return;
-        }
-
-        // Data to be inserted
-        final data = {
-          'nisn': _nisnController.text,
-          'nama_lengkap': _namaController.text,
-          'jenis_kelamin': _jenisKelamin == 'Laki-laki' ? 'L' : 'P',
-          'agama': _agama,
-          'tempat_lahir': _tempatLahirController.text,
-          'tanggal_lahir': tanggalLahir.toIso8601String(),
-          'no_telp_hp': _noHpController.text.isEmpty
-              ? null
-              : _noHpController.text,
-          'nik': _nikController.text,
-          'alamat_jalan': _jalanController.text,
-          'alamat_rt': rt,
-          'alamat_rw': rw,
-          'alamat_dusun': _selectedDusun,
-          'alamat_desa': _selectedDesa,
-          'alamat_kecamatan': _selectedKecamatan,
-          'alamat_kabupaten': _selectedKabupaten,
-          'alamat_provinsi': 'Jawa Timur',
-          'alamat_kode_pos': _selectedKodePos,
-          'nama_ayah': _ayahController.text.isEmpty
-              ? null
-              : _ayahController.text,
-          'nama_ibu': _ibuController.text.isEmpty ? null : _ibuController.text,
-          'nama_wali': _waliController.text.isEmpty
-              ? null
-              : _waliController.text,
-          'alamat_ortu_wali': _alamatOrtuController.text.isEmpty
-              ? null
-              : _alamatOrtuController.text,
-        };
-
-        // Debug: Print data before insert
-        print('Data to insert: $data');
-
-        // Insert data into data_siswa table
-        print('Sending insert to Supabase...'); // Debug: Sebelum insert
-        await supabase.from('data_siswa').insert(data);
-        print('Insert successful'); // Debug: Insert berhasil
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Data berhasil disimpan")),
-        );
-        Navigator.pop(context, true);
-      } catch (e) {
-        print('Error saving data: $e'); // Debug: Error saat insert
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("❌ Gagal simpan: $e")));
-      }
-    } else {
-      print('Form validation failed'); // Debug: Validasi form gagal
+    bool isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Isi semua kolom wajib dengan benar")),
+        const SnackBar(content: Text("❌ Mohon lengkapi semua data")),
+      );
+      return;
+    }
+
+    if (_selectedDusun == null ||
+        _selectedDesa == null ||
+        _selectedKecamatan == null ||
+        _selectedKabupaten == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Pilih alamat lengkap terlebih dahulu")),
+      );
+      return;
+    }
+
+    String? rt;
+    String? rw;
+    if (_rtRwController.text.isNotEmpty) {
+      final parts = _rtRwController.text.split('/');
+      rt = parts.isNotEmpty ? parts[0].trim() : null;
+      rw = parts.length > 1 ? parts[1].trim() : null;
+    }
+
+    DateTime? tanggalLahir;
+    try {
+      final parts = _tanggalLahirController.text.split('-');
+      if (parts.length == 3) {
+        tanggalLahir = DateTime(
+          int.parse(parts[2]),
+          int.parse(parts[1]),
+          int.parse(parts[0]),
+        );
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Format tanggal lahir salah")),
+      );
+      return;
+    }
+
+    final data = {
+      'nisn': _nisnController.text,
+      'nama_lengkap': _namaController.text,
+      'jenis_kelamin': _jenisKelamin == 'Laki-laki' ? 'L' : 'P',
+      'agama': _agama,
+      'tempat_lahir': _tempatLahirController.text,
+      'tanggal_lahir': tanggalLahir?.toIso8601String(),
+      'no_telp_hp':
+          _noHpController.text.isEmpty ? null : _noHpController.text,
+      'nik': _nikController.text,
+      'alamat_jalan': _jalanController.text,
+      'alamat_rt': rt,
+      'alamat_rw': rw,
+      'alamat_dusun': _selectedDusun,
+      'alamat_desa': _selectedDesa,
+      'alamat_kecamatan': _selectedKecamatan,
+      'alamat_kabupaten': _selectedKabupaten,
+      'alamat_provinsi': 'Jawa Timur',
+      'alamat_kode_pos': _selectedKodePos,
+      'nama_ayah':
+          _ayahController.text.isEmpty ? null : _ayahController.text,
+      'nama_ibu':
+          _ibuController.text.isEmpty ? null : _ibuController.text,
+      'nama_wali':
+          _waliController.text.isEmpty ? null : _waliController.text,
+      'alamat_ortu_wali':
+          _alamatOrtuController.text.isEmpty ? null : _alamatOrtuController.text,
+    };
+
+    try {
+      if (widget.student == null) {
+        await supabase.from('data_siswa').insert(data);
+      } else {
+        await supabase
+            .from('data_siswa')
+            .update(data)
+            .eq('id', widget.student!['id']);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("✅ Data berhasil disimpan")),
+      );
+      Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Gagal simpan: $e")),
       );
     }
   }
@@ -222,10 +222,23 @@ class _FormScreenState extends State<FormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kaiBackground,
-      appBar: AppBar(
-        title: const Text("Form Pendaftaran"),
-        backgroundColor: kaiPrimary,
-        foregroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(20),
+          ),
+          child: AppBar(
+            title: Text(
+              widget.student == null
+                  ? "Form Pendaftaran"
+                  : "Edit Data Siswa",
+            ),
+            backgroundColor: kaiPrimary,
+            foregroundColor: Colors.white,
+            elevation: 4,
+          ),
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -237,9 +250,8 @@ class _FormScreenState extends State<FormScreen> {
                 type: StepperType.vertical,
                 currentStep: _currentStep,
                 onStepTapped: (step) => setState(() => _currentStep = step),
-                controlsBuilder: (context, details) {
-                  return const SizedBox.shrink();
-                },
+                controlsBuilder: (context, details) =>
+                    const SizedBox.shrink(),
                 steps: [
                   Step(
                     title: const Text("Data Diri"),
@@ -279,18 +291,21 @@ class _FormScreenState extends State<FormScreen> {
     );
   }
 
-  // Wrap content in card with shadow
   Widget _buildCard(Widget child) {
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       margin: const EdgeInsets.symmetric(vertical: 8),
       color: Colors.white,
-      child: Padding(padding: const EdgeInsets.all(16.0), child: child),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: child,
+      ),
     );
   }
 
-  // --- Data Diri ---
   Widget _buildDataDiri() {
     return Column(
       children: [
@@ -307,7 +322,8 @@ class _FormScreenState extends State<FormScreen> {
         InputField(
           controller: _namaController,
           label: "Nama Lengkap",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
         const SizedBox(height: 12),
         GenderSelector(onChanged: (val) => _jenisKelamin = val),
@@ -315,7 +331,13 @@ class _FormScreenState extends State<FormScreen> {
         DropdownField(
           label: "Agama",
           value: _agama,
-          items: const ["Islam", "Kristen", "Katolik", "Hindu", "Buddha"],
+          items: const [
+            "Islam",
+            "Kristen",
+            "Katolik",
+            "Hindu",
+            "Buddha"
+          ],
           onChanged: (val) => setState(() => _agama = val),
         ),
         const SizedBox(height: 12),
@@ -335,7 +357,8 @@ class _FormScreenState extends State<FormScreen> {
                 controller: _tanggalLahirController,
                 label: "Tanggal Lahir",
                 readOnly: true,
-                suffixIcon: const Icon(Icons.calendar_today, color: kaiPrimary),
+                suffixIcon:
+                    const Icon(Icons.calendar_today, color: kaiPrimary),
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Wajib diisi' : null,
                 onTap: () async {
@@ -359,7 +382,7 @@ class _FormScreenState extends State<FormScreen> {
           controller: _noHpController,
           label: "No HP",
           validator: (val) {
-            if (val == null || val.isEmpty) return null; // No HP opsional
+            if (val == null || val.isEmpty) return null;
             if (!RegExp(r'^\d{10,15}$').hasMatch(val)) {
               return 'No HP harus 10-15 angka';
             }
@@ -370,26 +393,28 @@ class _FormScreenState extends State<FormScreen> {
         InputField(
           controller: _nikController,
           label: "NIK",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
       ],
     );
   }
 
-  // --- Alamat ---
   Widget _buildAlamat() {
     return Column(
       children: [
         InputField(
           controller: _jalanController,
           label: "Jalan",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
         const SizedBox(height: 12),
         InputField(
           controller: _rtRwController,
           label: "RT/RW",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
         const SizedBox(height: 12),
         FutureBuilder<List<String>>(
@@ -399,7 +424,6 @@ class _FormScreenState extends State<FormScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              print('Error in FutureBuilder: ${snapshot.error}');
               return Text('Error: ${snapshot.error}');
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -430,20 +454,21 @@ class _FormScreenState extends State<FormScreen> {
     );
   }
 
-  // --- Orang Tua/Wali ---
   Widget _buildOrtu() {
     return Column(
       children: [
         InputField(
           controller: _ayahController,
           label: "Nama Ayah",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
         const SizedBox(height: 12),
         InputField(
           controller: _ibuController,
           label: "Nama Ibu",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
         const SizedBox(height: 12),
         InputField(controller: _waliController, label: "Nama Wali"),
@@ -451,7 +476,8 @@ class _FormScreenState extends State<FormScreen> {
         InputField(
           controller: _alamatOrtuController,
           label: "Alamat Orang Tua / Wali",
-          validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Wajib diisi' : null,
         ),
       ],
     );
