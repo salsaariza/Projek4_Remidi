@@ -9,7 +9,7 @@ class DropdownField extends StatelessWidget {
     super.key,
     required this.label,
     required this.items,
-    required this.onChanged,
+    required this.onChanged, required String value,
   });
 
   @override
@@ -30,7 +30,10 @@ class DropdownField extends StatelessWidget {
         ),
       ),
       items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .map((item) => DropdownMenuItem(
+                value: item,
+                child: Text(item),
+              ))
           .toList(),
       onChanged: (value) {
         if (value != null) onChanged(value);

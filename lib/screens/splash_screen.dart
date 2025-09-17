@@ -17,14 +17,14 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.school, size: 100, color: Colors.blue),
+            const Icon(Icons.school, size: 100, color: Color.fromARGB(255, 0, 91,172),),
             const SizedBox(height: 20),
             const Text(
               "School Hub",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue,
+                color: Color.fromARGB(255, 0, 91,172),
                 letterSpacing: 1.2,
               ),
               textAlign: TextAlign.center,
@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
               icon: const Icon(
                 Icons.arrow_forward,
                 size: 40,
-                color: Colors.blue,
+                color: Color.fromARGB(255, 0, 91,172),
               ),
               onPressed: () {
                 Navigator.pushReplacement(
