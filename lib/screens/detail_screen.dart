@@ -99,6 +99,8 @@ class DetailScreen extends StatelessWidget {
                   children: [
                     _buildTile(Icons.badge, "NISN", student['nisn']),
                     _buildTile(Icons.person, "Nama Lengkap", student['nama_lengkap']),
+                    _buildTile(Icons.book, "NIK", student['nik']),
+                    _buildTile(Icons.phone, "No Telp", student['no_telp_hp']),
                     _buildTile(Icons.book, "Agama", student['agama']),
                     _buildTile(Icons.home, "Dusun", student['alamat_dusun']),
                     _buildTile(Icons.home_work, "Desa", student['alamat_desa']),

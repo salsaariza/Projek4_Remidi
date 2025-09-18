@@ -113,13 +113,13 @@ class _FormScreenState extends State<FormScreen> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Dusun tidak ditemukan")),
+          const SnackBar(content: Text("Dusun tidak ditemukan")),
         );
       }
     } catch (e) {
       debugPrint('Error updating location: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Gagal memuat lokasi: $e")),
+        SnackBar(content: Text("Gagal memuat lokasi: $e")),
       );
     }
   }
@@ -128,7 +128,7 @@ class _FormScreenState extends State<FormScreen> {
     bool isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Mohon lengkapi semua data")),
+        const SnackBar(content: Text("Mohon lengkapi semua data")),
       );
       return;
     }
@@ -138,7 +138,7 @@ class _FormScreenState extends State<FormScreen> {
         _selectedKecamatan == null ||
         _selectedKabupaten == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Pilih alamat lengkap terlebih dahulu")),
+        const SnackBar(content: Text("Pilih alamat lengkap terlebih dahulu")),
       );
       return;
     }
@@ -163,7 +163,7 @@ class _FormScreenState extends State<FormScreen> {
       }
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Format tanggal lahir salah")),
+        const SnackBar(content: Text("Format tanggal lahir salah")),
       );
       return;
     }
@@ -208,12 +208,12 @@ class _FormScreenState extends State<FormScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Data berhasil disimpan")),
+        const SnackBar(content: Text("Data berhasil disimpan")),
       );
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Gagal simpan: $e")),
+        SnackBar(content: Text("Gagal simpan: $e")),
       );
     }
   }

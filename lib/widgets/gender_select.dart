@@ -10,7 +10,7 @@ class GenderSelector extends StatefulWidget {
 }
 
 class _GenderSelectorState extends State<GenderSelector> {
-  String _selected = "Laki-laki";
+  String _selected = "Laki-Laki";
 
   @override
   Widget build(BuildContext context) {
@@ -21,14 +21,14 @@ class _GenderSelectorState extends State<GenderSelector> {
         Row(
           children: [
             Radio<String>(
-              value: "Laki-laki",
+              value: "Laki-Laki",
               groupValue: _selected,
               onChanged: (value) {
                 setState(() => _selected = value!);
                 widget.onChanged(value!);
               },
             ),
-            const Text("Laki-laki"),
+            const Text("Laki-Laki"),
             Radio<String>(
               value: "Perempuan",
               groupValue: _selected,
