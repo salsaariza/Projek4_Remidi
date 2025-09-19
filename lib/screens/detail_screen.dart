@@ -16,7 +16,7 @@ class DetailScreen extends StatelessWidget {
         preferredSize: const Size.fromHeight(60),
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(20), // 🔹 Border radius bawah AppBar
+            bottom: Radius.circular(20),
           ),
           child: AppBar(
             title: Text(student['nama_lengkap'] ?? "Detail Siswa"),
@@ -32,18 +32,19 @@ class DetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 🔹 Heading dalam Card
+            // 🔹 Card Profil (tanpa outline)
             Card(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
-              elevation: 4,
+              elevation: 3,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                 child: Column(
                   children: [
                     CircleAvatar(
-                      radius: 50,
+                      radius: 45,
                       backgroundColor: student['jenis_kelamin'] == 'L'
                           ? Colors.blue
                           : student['jenis_kelamin'] == 'P'
@@ -52,11 +53,11 @@ class DetailScreen extends StatelessWidget {
                       child: Text(
                         student['nama_lengkap']?.isNotEmpty == true
                             ? student['nama_lengkap'][0].toUpperCase()
-                            : '?',
+                            : "?",
                         style: const TextStyle(
-                          color: Colors.white,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          fontSize: 32,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -64,11 +65,11 @@ class DetailScreen extends StatelessWidget {
                     Text(
                       student['nama_lengkap'] ?? "-",
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       student['jenis_kelamin'] == 'L'
                           ? "Laki-laki"
@@ -87,51 +88,54 @@ class DetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 🔹 Card data detail
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Column(
-                  children: [
-                    _buildTile(Icons.badge, "NISN", student['nisn']),
-                    _buildTile(Icons.person, "Nama Lengkap", student['nama_lengkap']),
-                    _buildTile(Icons.book, "NIK", student['nik']),
-                    _buildTile(Icons.phone, "No Telp", student['no_telp_hp']),
-                    _buildTile(Icons.book, "Agama", student['agama']),
-                    _buildTile(Icons.home, "Dusun", student['alamat_dusun']),
-                    _buildTile(Icons.home_work, "Desa", student['alamat_desa']),
-                    _buildTile(Icons.map, "Kecamatan", student['alamat_kecamatan']),
-                    _buildTile(Icons.location_city, "Kabupaten", student['alamat_kabupaten']),
-                    _buildTile(Icons.public, "Provinsi", student['alamat_provinsi']),
-                    _buildTile(Icons.local_post_office, "Kode Pos", student['alamat_kode_pos']),
-                    _buildTile(Icons.cake, "Tanggal Lahir", student['tanggal_lahir']),
-                    _buildTile(Icons.man, "Nama Ayah", student['nama_ayah']),
-                    _buildTile(Icons.woman, "Nama Ibu", student['nama_ibu']),
-                    _buildTile(Icons.person, "Nama Wali", student['nama_wali']),
-                    _buildTile(Icons.home, "Alamat Orang Tua / Wali", student['alamat_ortu_wali']),
-                  ],
-                ),
-              ),
-            ),
+            // 🔹 Detail Data (outline biru)
+            _buildCard(Icons.badge, "NISN", student['nisn']),
+            _buildCard(Icons.person, "Nama Lengkap", student['nama_lengkap']),
+            _buildCard(Icons.book, "NIK", student['nik']),
+            _buildCard(Icons.phone, "No Telp", student['no_telp_hp']),
+            _buildCard(Icons.book, "Agama", student['agama']),
+            _buildCard(Icons.home, "Dusun", student['alamat_dusun']),
+            _buildCard(Icons.home_work, "Desa", student['alamat_desa']),
+            _buildCard(Icons.map, "Kecamatan", student['alamat_kecamatan']),
+            _buildCard(
+                Icons.location_city, "Kabupaten", student['alamat_kabupaten']),
+            _buildCard(Icons.public, "Provinsi", student['alamat_provinsi']),
+            _buildCard(Icons.local_post_office, "Kode Pos",
+                student['alamat_kode_pos']),
+            _buildCard(Icons.cake, "Tanggal Lahir", student['tanggal_lahir']),
+            _buildCard(Icons.man, "Nama Ayah", student['nama_ayah']),
+            _buildCard(Icons.woman, "Nama Ibu", student['nama_ibu']),
+            _buildCard(Icons.person, "Nama Wali", student['nama_wali']),
+            _buildCard(Icons.home, "Alamat Orang Tua / Wali",
+                student['alamat_ortu_wali']),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTile(IconData icon, String label, String? value) {
-    return ListTile(
-      leading: Icon(icon, color: kaiPrimary),
-      title: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+  Widget _buildCard(IconData icon, String label, String? value) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: kaiPrimary, width: 1.2), //Outline biru
       ),
-      subtitle: Text(value ?? "-"),
-      dense: true,
+      child: ListTile(
+        leading: Icon(icon, color: kaiPrimary, size: 24),
+        title: Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Text(
+          value ?? "-",
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+        ),
+      ),
     );
   }
 }

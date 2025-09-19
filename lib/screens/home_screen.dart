@@ -40,9 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Pantau koneksi internet real-time
     _subscription = Connectivity().onConnectivityChanged.listen((results) {
-      final result = results.isNotEmpty
-          ? results.first
-          : ConnectivityResult.none;
+      final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
       if (result == ConnectivityResult.none) {
         setState(() {
           _hasError = true;
@@ -53,6 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadStudents();
       }
     });
+
+    // Refresh UI kalau isi search berubah (untuk suffixIcon)
+    _searchController.addListener(() => setState(() {}));
   }
 
   @override
@@ -160,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // search bar
+          // 🔎 Search bar dengan tombol clear/kembali
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(
@@ -169,6 +170,15 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: InputDecoration(
                 hintText: "Cari nama siswa",
                 prefixIcon: const Icon(Icons.search, color: kaiPrimary),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          _filterStudents(""); // reset daftar
+                        },
+                      )
+                    : null,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 14,
@@ -180,12 +190,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 1.2,
                   ),
                 ),
-                // Outline saat aktif
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: const BorderSide(color: kaiPrimary, width: 2),
                 ),
-                // Outline saat tidak fokus
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(color: Colors.grey, width: 1),
@@ -197,176 +205,180 @@ class _HomeScreenState extends State<HomeScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _hasError
-                ? ErrorScreen(
-                    errorType: _errorType,
-                    message: _errorMessage,
-                    onRetry: _loadStudents,
-                  )
-                : _students.isEmpty
-                ? const Center(
-                    child: Text(
-                      "Belum ada data siswa",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _loadStudents,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: _students.length,
-                      itemBuilder: (context, index) {
-                        final student = _students[index];
-
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    DetailScreen(student: student),
+                    ? ErrorScreen(
+                        errorType: _errorType,
+                        message: _errorMessage,
+                        onRetry: _loadStudents,
+                      )
+                    : _students.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "Belum ada data siswa",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
-                            );
-                          },
-                          child: Card(
-                            elevation: 3,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
                             ),
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor:
-                                        student['jenis_kelamin'] == 'L'
-                                        ? Colors.blue
-                                        : student['jenis_kelamin'] == 'P'
-                                        ? Colors.pink
-                                        : Colors.grey,
-                                    child: Text(
-                                      student['nama_lengkap']?.isNotEmpty ==
-                                              true
-                                          ? student['nama_lengkap'][0]
-                                                .toUpperCase()
-                                          : '?',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadStudents,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: _students.length,
+                              itemBuilder: (context, index) {
+                                final student = _students[index];
+
+                                return InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            DetailScreen(student: student),
                                       ),
+                                    );
+                                  },
+                                  child: Card(
+                                    elevation: 3,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          student['nama_lengkap'] ?? '-',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "${student['jenis_kelamin'] == 'L'
-                                              ? 'Laki-laki'
-                                              : student['jenis_kelamin'] == 'P'
-                                              ? 'Perempuan'
-                                              : '-'}",
-                                        ),
-                                        Text(
-                                          "Dusun : ${student['alamat_dusun'] ?? '-'}",
-                                        ),
-                                        Text(
-                                          "Desa : ${student['alamat_desa'] ?? '-'}",
-                                        ),
-                                      ],
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
                                     ),
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.blue,
-                                        ),
-                                        onPressed: () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  FormScreen(student: student),
+                                    color: Colors.white,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 28,
+                                            backgroundColor:
+                                                student['jenis_kelamin'] == 'L'
+                                                    ? Colors.blue
+                                                    : student['jenis_kelamin'] ==
+                                                            'P'
+                                                        ? Colors.pink
+                                                        : Colors.grey,
+                                            child: Text(
+                                              student['nama_lengkap']
+                                                          ?.isNotEmpty ==
+                                                      true
+                                                  ? student['nama_lengkap'][0]
+                                                      .toUpperCase()
+                                                  : '?',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
                                             ),
-                                          );
-                                          if (result == true) {
-                                            _loadStudents();
-                                          }
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: const Text(
-                                                "Konfirmasi Hapus",
-                                              ),
-                                              content: Text(
-                                                "Apakah anda yakin ingin menghapus data ${student['nama_lengkap']}?",
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(context),
-                                                  child: const Text("Batal"),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                    _deleteStudent(
-                                                      student['id'],
-                                                    );
-                                                  },
-                                                  child: const Text(
-                                                    "Hapus",
-                                                    style: TextStyle(
-                                                      color: Colors.red,
-                                                    ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  student['nama_lengkap'] ?? '-',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16,
                                                   ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  "${student['jenis_kelamin'] == 'L' ? 'Laki-laki' : student['jenis_kelamin'] == 'P' ? 'Perempuan' : '-'}",
+                                                ),
+                                                Text(
+                                                  "Dusun : ${student['alamat_dusun'] ?? '-'}",
+                                                ),
+                                                Text(
+                                                  "Desa : ${student['alamat_desa'] ?? '-'}",
                                                 ),
                                               ],
                                             ),
-                                          );
-                                        },
+                                          ),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.edit,
+                                                  color: Colors.blue,
+                                                ),
+                                                onPressed: () async {
+                                                  final result =
+                                                      await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          FormScreen(
+                                                              student: student),
+                                                    ),
+                                                  );
+                                                  if (result == true) {
+                                                    _loadStudents();
+                                                  }
+                                                },
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        AlertDialog(
+                                                      title: const Text(
+                                                        "Konfirmasi Hapus",
+                                                      ),
+                                                      content: Text(
+                                                        "Apakah anda yakin ingin menghapus data ${student['nama_lengkap']}?",
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context),
+                                                          child: const Text(
+                                                              "Batal"),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                            _deleteStudent(
+                                                                student['id']);
+                                                          },
+                                                          child: const Text(
+                                                            "Hapus",
+                                                            style: TextStyle(
+                                                              color: Colors.red,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
           ),
         ],
       ),
